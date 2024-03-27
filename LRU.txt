@@ -1,0 +1,120 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_CACHE_SIZE 5
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+    struct Node* prev;
+} Node;
+
+typedef struct LRUCache {
+    Node* front;
+    Node* rear;
+    int size;
+    int capacity;
+} LRUCache;
+
+LRUCache* createCache(int capacity) {
+    LRUCache* cache = (LRUCache*)malloc(sizeof(LRUCache));
+    cache->front = NULL;
+    cache->rear = NULL;
+    cache->size = 0;
+    cache->capacity = capacity;
+    return cache;
+}
+
+Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = data;
+    newNode->next = NULL;
+    newNode->prev = NULL;
+    return newNode;
+}
+
+void removeFromList(LRUCache* cache, Node* node) {
+    if (node->prev != NULL) {
+        node->prev->next = node->next;
+    } else {
+        cache->front = node->next;
+    }
+
+    if (node->next != NULL) {
+        node->next->prev = node->prev;
+    } else {
+        cache->rear = node->prev;
+    }
+
+    free(node);
+    cache->size--;
+}
+
+void addToFront(LRUCache* cache, Node* node) {
+    node->next = cache->front;
+    node->prev = NULL;
+
+    if (cache->front != NULL) {
+        cache->front->prev = node;
+    } else {
+        cache->rear = node;
+    }
+
+    cache->front = node;
+    cache->size++;
+}
+
+void accessCache(LRUCache* cache, int data) {
+    Node* current = cache->front;
+
+    while (current != NULL) {
+        if (current->data == data) {
+            removeFromList(cache, current);
+            break;
+        }
+        current = current->next;
+    }
+
+    if (cache->size >= cache->capacity) {
+        removeFromList(cache, cache->rear);
+    }
+
+    addToFront(cache, createNode(data));
+}
+
+void printCache(LRUCache* cache) {
+    Node* current = cache->front;
+    printf("LRU Cache: ");
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+}
+
+int main() {
+    LRUCache* cache = createCache(MAX_CACHE_SIZE);
+
+    accessCache(cache, 1);
+    printCache(cache);
+
+    accessCache(cache, 2);
+    printCache(cache);
+
+    accessCache(cache, 3);
+    printCache(cache);
+
+    accessCache(cache, 4);
+    printCache(cache);
+
+    accessCache(cache, 1);
+    printCache(cache);
+
+    accessCache(cache, 5);
+    printCache(cache);
+
+    accessCache(cache, 2);
+    printCache(cache);
+
+    return 0;
+}
